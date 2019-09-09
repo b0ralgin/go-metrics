@@ -10,6 +10,7 @@ import (
 	"metrics/manager"
 	"metrics/storage"
 	"net/http"
+	"time"
 )
 
 // StartHTTPServerCommand - старт HTTP сервера для обработки запросов по REST API
@@ -38,8 +39,10 @@ func startServer(c *cli.Context) error {
 
 	api.NewApiController(metricManager, router)
 	srv := http.Server{
-		Addr:    ":8080",
-		Handler: router,
+		Addr:         ":8080",
+		Handler:      router,
+		ReadTimeout:  1 * time.Second,
+		WriteTimeout: 1 * time.Second,
 	}
 	grp, _ := errgroup.WithContext(context.Background())
 	grp.Go(srv.ListenAndServe)

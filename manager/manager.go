@@ -13,17 +13,17 @@ type MetricManager interface {
 
 type Manager struct {
 	strg    storage.Storage
-	buf     []metrics.Metric
 	metrics chan metrics.Metric
+	buf     []metrics.Metric
 	tick    *time.Ticker
-	done    chan bool
+	done    bool
 }
 
 func NewMetricManager(strg storage.Storage, bufLen int64, period time.Duration) *Manager {
 	return &Manager{
 		buf:     []metrics.Metric{},
+		metrics: make(chan metrics.Metric, 100),
 		strg:    strg,
-		metrics: make(chan metrics.Metric, bufLen),
 		tick:    time.NewTicker(period),
 	}
 }
@@ -35,26 +35,22 @@ func (mm *Manager) AddMetric(metric metrics.Metric) {
 func (mm *Manager) Run() error {
 	for {
 		select {
-		case m, ok := <-mm.metrics:
-			if !ok {
-				break
-			}
+		case m := <-mm.metrics:
 			mm.buf = append(mm.buf, m)
 		case <-mm.tick.C:
 			if err := mm.save(); err != nil {
 				return err
 			}
+			if mm.done {
+				return errors.New("runner stopped")
+			}
 		}
-
-		if err := mm.save(); err != nil {
-			return err
-		}
-		return errors.New("runner stopped")
 	}
 }
 
 func (mm *Manager) Close() {
-	close(mm.metrics)
+	mm.tick.Stop()
+	mm.done = true
 }
 
 func (mm *Manager) save() error {
