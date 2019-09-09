@@ -33,6 +33,9 @@ func NewMetricManager(strg storage.Storage, bufLen int64, period time.Duration) 
 
 //MetricManager добавление метрики
 func (mm *Manager) AddMetric(metric metrics.Metric) {
+	if mm.done {
+		return
+	}
 	mm.metrics <- metric
 }
 
