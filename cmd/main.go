@@ -1,9 +1,10 @@
 package main
 
 import (
-	"github.com/urfave/cli"
 	"metrics/cmd/server"
 	"os"
+
+	"github.com/urfave/cli"
 )
 
 var (

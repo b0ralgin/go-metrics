@@ -5,6 +5,7 @@ import (
 	"time"
 )
 
+//Metric модель метрики
 type Metric struct {
 	ID   string
 	Type string

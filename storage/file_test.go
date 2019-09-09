@@ -2,15 +2,17 @@ package storage
 
 import (
 	"bytes"
-	"github.com/stretchr/testify/assert"
 	"metrics"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 type mockFile struct {
 	*bytes.Buffer
 }
 
+//nolint:gochecknoglobals
 var testMetric = metrics.Metric{
 	ID:   "1",
 	Type: "event",

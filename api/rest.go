@@ -1,17 +1,18 @@
 package api
 
 import (
-	"github.com/gin-gonic/gin"
 	"metrics"
 	"metrics/manager"
+
+	"github.com/gin-gonic/gin"
 )
 
 type apiController struct {
 	mm manager.MetricManager
 }
 
-//NewApiController  инициализация обработчика
-func NewApiController(mm manager.MetricManager, router *gin.Engine) {
+//NewAPIController  инициализация обработчика
+func NewAPIController(mm manager.MetricManager, router *gin.Engine) {
 	api := &apiController{mm}
 	router.Handle("POST", "/collect", api.AddMetric)
 }

@@ -1,10 +1,12 @@
 package config
 
 import (
-	"github.com/kelseyhightower/envconfig"
 	"time"
+
+	"github.com/kelseyhightower/envconfig"
 )
 
+//Config конфиг приложения
 type Config struct {
 	Port   string        `envconfig:"port"`
 	File   string        `envconfig:"file"`

@@ -1,13 +1,15 @@
 package manager
 
 import (
-	"github.com/stretchr/testify/assert"
 	"metrics"
 	"metrics/storage/mocks"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
 )
 
+//nolint:gochecknoglobals
 var testMetric = metrics.Metric{
 	ID:   "1",
 	Type: "event",

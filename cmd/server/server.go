@@ -2,9 +2,6 @@ package server
 
 import (
 	"context"
-	"github.com/gin-gonic/gin"
-	"github.com/urfave/cli"
-	"golang.org/x/sync/errgroup"
 	"metrics/api"
 	"metrics/config"
 	"metrics/manager"
@@ -14,6 +11,10 @@ import (
 	"os/signal"
 	"syscall"
 	"time"
+
+	"github.com/gin-gonic/gin"
+	"github.com/urfave/cli"
+	"golang.org/x/sync/errgroup"
 )
 
 // StartServerCommand - старт сервера для обработки запросов
@@ -40,7 +41,7 @@ func startServer(c *cli.Context) error {
 
 	router := gin.New()
 
-	api.NewApiController(metricManager, router)
+	api.NewAPIController(metricManager, router)
 	srv := http.Server{
 		Addr:         ":8080",
 		Handler:      router,
@@ -55,11 +56,10 @@ func startServer(c *cli.Context) error {
 
 	sig := make(chan os.Signal, 1) // добавляем обработку сигналов для graceful shutdown
 	signal.Notify(sig, syscall.SIGINT, syscall.SIGTERM)
-	select {
-	case <-sig:
-		srv.Shutdown(context.Background()) //nolint:errcheck
-		metricManager.Close()
-	}
+	<-sig
+	srv.Shutdown(context.Background()) //nolint:errcheck
+	metricManager.Close()
+
 	if err := grp.Wait(); err != nil { // ожидаем ошибки от обработчиков
 		return err
 	}
