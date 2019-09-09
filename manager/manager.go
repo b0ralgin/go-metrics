@@ -22,7 +22,7 @@ type Manager struct {
 func NewMetricManager(strg storage.Storage, bufLen int64, period time.Duration) *Manager {
 	return &Manager{
 		buf:     []metrics.Metric{},
-		metrics: make(chan metrics.Metric, 100),
+		metrics: make(chan metrics.Metric, bufLen),
 		strg:    strg,
 		tick:    time.NewTicker(period),
 	}
