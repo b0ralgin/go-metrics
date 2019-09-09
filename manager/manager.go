@@ -7,18 +7,21 @@ import (
 	"time"
 )
 
+//MetricManager интерфейс менеджера метрик
 type MetricManager interface {
 	AddMetric(m metrics.Metric)
 }
 
+//Manager менеджер для обработки метрик
 type Manager struct {
-	strg    storage.Storage
-	metrics chan metrics.Metric
-	buf     []metrics.Metric
-	tick    *time.Ticker
-	done    bool
+	strg    storage.Storage     // хранилища
+	metrics chan metrics.Metric //канал для входящих метрик
+	buf     []metrics.Metric    //буфер для сохранения метрик, которые будут записаны в хранилище
+	tick    *time.Ticker        //таймер для определения периодичности, с которой сохраняются данные
+	done    bool                // флаг для определения, что сервис нужно остановить
 }
 
+//NewMetricManager инициализацяи обработчика
 func NewMetricManager(strg storage.Storage, bufLen int64, period time.Duration) *Manager {
 	return &Manager{
 		buf:     []metrics.Metric{},
@@ -28,28 +31,32 @@ func NewMetricManager(strg storage.Storage, bufLen int64, period time.Duration) 
 	}
 }
 
+//MetricManager добавление метрики
 func (mm *Manager) AddMetric(metric metrics.Metric) {
 	mm.metrics <- metric
 }
 
+//Run запуск обработчика
 func (mm *Manager) Run() error {
 	for {
 		select {
-		case m := <-mm.metrics:
+		case m := <-mm.metrics: // есть входящие метрики
 			mm.buf = append(mm.buf, m)
-		case <-mm.tick.C:
+		case <-mm.tick.C: // настало время сохранения в базу
 			if err := mm.save(); err != nil {
 				return err
 			}
-			if mm.done {
+		default:
+			if mm.done && len(mm.metrics) == 0 { //сервис закрывается
+
 				return errors.New("runner stopped")
 			}
 		}
 	}
 }
 
+//Close останов обработчика
 func (mm *Manager) Close() {
-	mm.tick.Stop()
 	mm.done = true
 }
 

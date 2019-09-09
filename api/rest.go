@@ -10,13 +10,15 @@ type apiController struct {
 	mm manager.MetricManager
 }
 
+//NewApiController  инициализация обработчика
 func NewApiController(mm manager.MetricManager, router *gin.Engine) {
 	api := &apiController{mm}
 	router.Handle("POST", "/collect", api.AddMetric)
 }
 
+//AddMetric обработчик
 func (api *apiController) AddMetric(g *gin.Context) {
-	metric := metrics.Metric{
+	metric := metrics.Metric{ //разбираем POST форму
 		ID:   g.PostForm("tid"),
 		Type: g.PostForm("t"),
 		URL:  g.PostForm("dp"),

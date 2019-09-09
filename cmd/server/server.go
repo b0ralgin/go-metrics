@@ -10,10 +10,13 @@ import (
 	"metrics/manager"
 	"metrics/storage"
 	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
 	"time"
 )
 
-// StartHTTPServerCommand - старт HTTP сервера для обработки запросов по REST API
+// StartServerCommand - старт сервера для обработки запросов
 func StartServerCommand() cli.Command {
 	return cli.Command{
 		Name:   "server",
@@ -44,11 +47,20 @@ func startServer(c *cli.Context) error {
 		ReadTimeout:  1 * time.Second,
 		WriteTimeout: 1 * time.Second,
 	}
+	//создание группы горутин с errgroup
 	grp, _ := errgroup.WithContext(context.Background())
-	grp.Go(srv.ListenAndServe)
-	grp.Go(metricManager.Run)
+	grp.Go(srv.ListenAndServe) // запуск HTTP сервера
 
-	if err := grp.Wait(); err != nil {
+	grp.Go(metricManager.Run) // запуск обработчика сообщений
+
+	sig := make(chan os.Signal, 1) // добавляем обработку сигналов для graceful shutdown
+	signal.Notify(sig, syscall.SIGINT, syscall.SIGTERM)
+	select {
+	case <-sig:
+		srv.Shutdown(context.Background()) //nolint:errcheck
+		metricManager.Close()
+	}
+	if err := grp.Wait(); err != nil { // ожидаем ошибки от обработчиков
 		return err
 	}
 	return nil
