@@ -31,12 +31,12 @@ func startServer(c *cli.Context) error {
 		return configErr
 	}
 
-	storage, storageErr := storage.NewFileStorage(cfg.File)
+	strg, storageErr := storage.NewFileStorage(cfg.File)
 	if storageErr != nil {
 		return storageErr
 	}
 
-	metricManager := manager.NewMetricManager(storage, 100, cfg.Period)
+	metricManager := manager.NewMetricManager(strg, 100, cfg.Period)
 
 	router := gin.New()
 
