@@ -1,12 +1,13 @@
 package storage
 
 import (
+	"io"
 	"metrics"
 	"os"
 )
 
 type fileStorage struct {
-	file *os.File
+	file io.WriteCloser
 }
 
 func NewFileStorage(filename string) (Storage, error) {
@@ -19,7 +20,7 @@ func NewFileStorage(filename string) (Storage, error) {
 
 func (f *fileStorage) SaveMetrics(metrics []metrics.Metric) error {
 	for _, m := range metrics {
-		if _, err := f.file.WriteString(m.String()); err != nil {
+		if _, err := f.file.Write([]byte(m.String())); err != nil {
 			return err
 		}
 	}

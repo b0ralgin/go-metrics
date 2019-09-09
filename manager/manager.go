@@ -16,6 +16,7 @@ type Manager struct {
 	buf     []metrics.Metric
 	metrics chan metrics.Metric
 	tick    *time.Ticker
+	done    chan bool
 }
 
 func NewMetricManager(strg storage.Storage, bufLen int64, period time.Duration) *Manager {
@@ -34,14 +35,32 @@ func (mm *Manager) AddMetric(metric metrics.Metric) {
 func (mm *Manager) Run() error {
 	for {
 		select {
-		case m := <-mm.metrics:
+		case m, ok := <-mm.metrics:
+			if !ok {
+				break
+			}
 			mm.buf = append(mm.buf, m)
 		case <-mm.tick.C:
-			if err := mm.strg.SaveMetrics(mm.buf); err != nil {
+			if err := mm.save(); err != nil {
 				return err
 			}
-			mm.buf = mm.buf[:0] //очищаем буффер, но оставляем прежнюю емкость
 		}
+
+		if err := mm.save(); err != nil {
+			return err
+		}
+		return errors.New("runner stopped")
 	}
-	return errors.New("runner stopped")
+}
+
+func (mm *Manager) Close() {
+	close(mm.metrics)
+}
+
+func (mm *Manager) save() error {
+	if err := mm.strg.SaveMetrics(mm.buf); err != nil {
+		return err
+	}
+	mm.buf = mm.buf[:0] //очищаем буффер, но оставляем прежнюю емкость
+	return nil
 }
